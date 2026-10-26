@@ -1,0 +1,523 @@
+% =====================================================================
+% Paper skeleton (cloud task T4, docs/cloud_tasks/T4_paper_skeleton.md)
+% IEEE RA-L style, IEEEtran journal class.
+%
+% SOURCE RULES (T4): no invented numbers or references. Every number
+% carries a \src{} tag naming the file it comes from (key list below);
+% anything without a source is a \TODO{}.
+%
+% Inputs that were NOT available when this skeleton was written:
+%   - docs/cloud_tasks/handover.md            (absent -> every handover item is \TODO)
+%   - docs/cloud_tasks/T1_related_work_report.md (absent -> Related Work is a \TODO list)
+%   - the results report of the frozen p9d_analyze.py (absent; only the
+%     post-check report is in eval/phase9/P9-D/)
+%   - the P9-E specification of T1, T2, F1--F4 (absent; placeholders only)
+%
+% Source keys used by \src{}:
+%   T4  docs/cloud_tasks/T4_paper_skeleton.md   (claims list, provided by Marco)
+%   CR  eval/phase9/P9-D/criterion.md            (pre-registered criterion)
+%   A1  eval/phase9/P9-D/addendum_A1.md
+%   A2  eval/phase9/P9-D/addendum_A2.md
+%   PR  eval/phase9/P9-D/prerun.md
+%   PCR eval/phase9/P9-D/postcheck_report.md
+%   PCT eval/phase9/P9-D/p9d_postcheck.md        (post-check task, frozen verdict table)
+%   CX  eval/phase9/P9-D/p9d_crowd_explore.md    (exploratory task spec; no results)
+% =====================================================================
+\documentclass[journal]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{siunitx}
+\usepackage{url}
+\usepackage{cite}
+
+% ---- draft macros ----------------------------------------------------
+\newcommand{\TODO}[1]{{\color{red}\textbf{[TODO:} #1\textbf{]}}}
+\newcommand{\src}[1]{\textsuperscript{\color{blue}\scriptsize[#1]}}
+\newcommand{\figplaceholder}[2]{%
+  \fbox{\parbox[c][#2][c]{0.95\linewidth}{\centering\small\color{gray}#1}}}
+
+\begin{document}
+
+\title{\TODO{Title}: Pedestrians Inside Visual-Inertial SLAM ---
+Online Estimation Without Measurable Camera Cost, and Why They Do Not Help Odometry}
+
+\author{\TODO{Authors and affiliations (handover)}%
+\thanks{\TODO{Manuscript dates, funding (handover).}}}
+
+\markboth{IEEE Robotics and Automation Letters. Preprint version. \TODO{date}}%
+{\TODO{Short author list}: Pedestrians Inside Visual-Inertial SLAM}
+
+\maketitle
+
+% =====================================================================
+\begin{abstract}
+We place pedestrians inside the local bundle adjustment of a mono-inertial
+visual SLAM system (an ORB-SLAM3-based fork) as persistent world-frame states,
+estimated online alongside the camera.
+In a pre-registered evaluation on \TODO{dataset name and sequences (handover)},
+the pedestrian layer estimates pedestrian velocity better than a per-track
+Kalman filter on the same measurements, and its position is no worse than
+per-frame back-projection; this result rests on the best-aligned runs, and a
+post-hoc sensitivity analysis is pending\src{T4}.
+On the camera we find no evidence of degradation: the ratio of median ATE with
+and without the layer is 1.00 [0.94,\,1.06] and 1.07 [0.95,\,1.18] on the two
+confirmatory sequences\src{T4}; the pre-registered non-inferiority test passes
+at a 10\% margin on one sequence and is inconclusive on the other\src{T4,\,A2}.
+We then explain why pedestrians cannot improve odometry under normal
+conditions: camera-relative pedestrian factors are absorbed exactly, and in
+the regime where every keyframe sees at least two static points the
+pedestrians carry no camera information. Threaded throughput is about
+6--7$\times$ real time\src{PCR\,\S5}.
+\TODO{Final abstract once results report and handover are available.}
+\end{abstract}
+
+\begin{IEEEkeywords}
+\TODO{RA-L keywords, e.g.\ SLAM; visual-inertial odometry; human detection and tracking}
+\end{IEEEkeywords}
+
+% =====================================================================
+\section{Introduction}
+\label{sec:intro}
+
+\IEEEPARstart{M}{otivation}: \TODO{(handover) Why estimate pedestrians
+inside the SLAM back-end; the common expectation that dynamic agents
+could also constrain the camera; what is missing in prior work (from T1 report,
+absent).}
+
+\TODO{(handover) One paragraph on the system: pedestrian states in the local
+BA of the ORB-SLAM3-based \texttt{visual\_sgraphs} fork; deterministic mode;
+evaluation design (pre-registered criterion, two independent hypothesis
+families\src{A2\,\S A2.3}).}
+
+\paragraph*{Contributions}
+The claims below are stated exactly at the strength of the evidence; none is
+upgraded beyond its status in the claims list\src{T4}.
+\begin{enumerate}
+  \item \emph{System.} Pedestrians as persistent states inside the local bundle
+  adjustment of a mono-inertial visual SLAM system, estimated online.
+  The threaded configuration runs at about 6--7$\times$ real time in
+  throughput (wall-clock \SIrange{99.8}{121.6}{\second} for
+  \SI{738}{\second} of sensor data, one run per arm)\src{PCR\,\S5};
+  latency was not measured.
+  \item \emph{Pedestrian estimation (pre-registered, supported).}
+  H2a: pedestrian velocity is better than a per-track Kalman filter on the same
+  measurements; H2b: pedestrian position is no worse than per-frame
+  back-projection\src{T4,\,PCT}. \emph{Caveat:} H2 rests on the best-aligned
+  runs (the pre-registered map-inclusion filter keeps 6--12 of 60 subway runs
+  per cell and arm)\src{PCR\,\S1}; a post-hoc sensitivity analysis is
+  pending\src{T4}.
+  \item \emph{Camera.} No evidence of degradation: median-ATE ratio
+  1.00 [0.94,\,1.06] and 1.07 [0.95,\,1.18]\src{T4}; non-inferior at a 10\%
+  margin on one sequence, inconclusive on the other; the pre-registered
+  camera hypothesis H1 formally failed\src{T4,\,PCT}.
+  \item \emph{Analysis: why pedestrians do not help the camera.}
+  (i) exact absorption of camera-relative pedestrian factors;
+  (ii) an information analysis showing that with $\geq 2$ static points per
+  node the pedestrians bring no camera benefit;
+  (iii) unidentifiability of stature, resolved by MAP shrinkage;
+  (iv) an erratum on range: depth-$z$ versus ray length;
+  (v) the chaotic run-to-run spread of ORB-SLAM3 and its effect on the effect
+  sizes that can be detected\src{T4}.
+\end{enumerate}
+
+\paragraph*{What we do not claim}
+We do not claim a camera improvement; we do not claim floor levels (the
+pre-registered levels hypothesis H4 failed\src{PCT}; levels are left to a
+follow-up paper\src{T4}); and we do not claim pedestrian accuracy on real
+data\src{T4}.
+
+% =====================================================================
+\section{Related Work}
+\label{sec:related}
+
+\TODO{The T1 related-work report (\texttt{docs/cloud\_tasks/T1\_related\_work\_report.md})
+is absent. No related work is written and no reference is cited until it exists.
+Structure to fill from T1, one paragraph per group, each method positioned
+against our system (online or offline; sensors; humans inside the back-end
+or not; human representation; camera-improvement claim; pedestrian metrics;
+datasets; code).}
+
+\begin{itemize}
+  \item \TODO{Baselines named in T4 itself: ORB-SLAM3 (the base system);
+  per-track Kalman filter (B1); per-frame back-projection (B0).}
+  \item \TODO{3D dynamic scene graphs with humans: Kimera / 3D Dynamic Scene
+  Graphs (uHumans datasets), Hydra.}
+  \item \TODO{Human mesh / trajectory recovery with camera motion: BodySLAM,
+  SLAHMR, PACE, WHAM, TRAM, GLAMR, JOSH.}
+  \item \TODO{Dynamic-object SLAM: AirDOS, DynoSAM, VDO-SLAM, ClusterVO,
+  DynaSLAM.}
+  \item \TODO{2023--2026 work estimating humans jointly with a SLAM/VIO back-end
+  (from T1 search).}
+  \item \TODO{Papers reporting the opposite camera finding (a camera benefit from
+  humans or dynamic objects) and their conditions (T1, item 4); contrast with
+  Sec.~\ref{sec:analysis}.}
+  \item \TODO{Positioning paragraph: which claims are new, incremental, or
+  already shown (T1, item 3).}
+\end{itemize}
+% Method names above are from the T1 task file (docs/cloud_tasks/T1_related_work.md);
+% no bib entries are created for them until the T1 report supplies verified sources.
+
+% =====================================================================
+\section{Method}
+\label{sec:method}
+
+The handover (\texttt{docs/cloud\_tasks/handover.md}) is not available; every
+item below that depends on it is marked \TODO{}. Statements without a
+\TODO{} are taken from the P9-D reports and carry their source.
+
+\subsection{System overview}
+\TODO{(handover) Block diagram and description.} The pedestrian layer lives
+inside the local bundle adjustment of ORB-SLAM3 in the \texttt{visual\_sgraphs}
+fork, mono-inertial; pedestrian instance masks are applied to the camera
+front end in every configuration, including the configuration without the
+layer\src{CR\,\S2}. The layer reads per-frame perception rows: person (P) rows,
+\TODO{C rows: meaning (handover)}, and optional foot (F) rows\src{A1\,\S A1.2}.
+Detections and keypoints come from RTMW\src{PR\,\S1}; tracks from
+\TODO{P1-A tracker (handover)}.
+
+\subsection{States}
+\TODO{(handover) Per-person world-frame root state: position, velocity;
+persistence and creation/retirement of tracks; anchoring to keyframes;
+per-track stature parameter $b$ (``per-track b'' is reported
+descriptively\src{CR\,\S6}).}
+\begin{equation}
+  \mathbf{x}_{j}(t) = \TODO{\text{state definition}}
+\end{equation}
+
+\subsection{Measurement factors}
+\TODO{(handover) Image factors of the person observation: bearing of the root
+keypoint, apparent body size (nose$\to$heel) as range cue; noise models,
+robust kernels, gating.}
+\begin{equation}
+  \mathbf{r}_{ij} = \TODO{\text{residual}}
+\end{equation}
+
+\subsection{Range from apparent size: depth-$z$, not ray length}
+\TODO{(handover) Range model at a fixed stature; the erratum: the size cue
+constrains the depth $z$ along the optical axis, not the length of the ray;
+effect of the earlier ray-length form and where it was corrected.}
+
+\subsection{Stature}
+\TODO{(handover) Stature is not identifiable from monocular size alone (it
+trades off against range); a prior on stature gives MAP shrinkage towards the
+prior mean; prior values. Cross-reference Sec.~\ref{sec:an-stature}.}
+
+\subsection{Motion prior}
+\TODO{(handover) Constant-velocity / white-noise-acceleration prior between
+consecutive pedestrian states; process-noise density; behaviour across gaps.}
+\begin{equation}
+  \mathbf{r}^{\text{mp}}_{j,k} = \TODO{\text{motion-prior residual}}
+\end{equation}
+
+\subsection{Footprints}
+\TODO{(handover) Stance-foot footprint factors.} The foot contact used by the
+contact factors is the midpoint of the left and right foot's lowest valid
+keypoint (F rows)\src{PR\,\S1}. F-row coverage on the evaluation sequences is
+46.8\%, 54.1\% and 71.2\% of person rows (subway\_s1\_36h, subway\_s1\_24h,
+office\_s1\_06h)\src{PR\,\S1}. Configuration \texttt{FloorContact: none} is the
+base used by the ON arm\src{CR\,\S2}. \TODO{(handover) Whether footprints are
+active in the ON arm; factor form.}
+
+\subsection{Integration into the local BA}
+\TODO{(handover) Which keyframes and pedestrian states enter the local window;
+fixed vs.\ free variables; marginalisation / dropping of old pedestrian states;
+interaction with IMU factors; solver settings; code locations
+(\texttt{PedestrianBA.cc}\src{A1\,\S A1.2}).}
+
+\subsection{Determinism}
+The evaluation runs ORB-SLAM3 in a deterministic mode, which is not stock
+ORB-SLAM3; three uninitialised-read contexts of the vanilla code
+remain\src{CR\,\S9}. With the levels configuration, five identical invocations
+on subway\_s1\_24h were byte-identical\src{PR\,\S3}. Run-to-run variation is
+introduced on purpose by a seeded jitter and a staging path of $40+k$
+characters for seed $k$, identical across arms\src{CR\,\S2}; output still
+depends on the settings-file text and path length (layout
+sensitivity)\src{PCR\,\S4}. \TODO{(handover) What the deterministic mode
+changes (thread scheduling, etc.).}
+
+\subsection{Floor levels (not claimed)}
+An optional floor-level landmark module (\texttt{FloorContact: levels}, no
+platform prior) exists and was evaluated\src{CR\,\S2}; its hypothesis H4
+failed\src{PCT} and the module is left to a follow-up paper\src{T4}.
+\TODO{Decide whether this subsection stays (one paragraph) or moves to
+Limitations.}
+
+% =====================================================================
+\section{Analysis: Why Pedestrians Do Not Help the Camera}
+\label{sec:analysis}
+
+\subsection{Absorption of camera-relative factors}
+\label{sec:an-absorb}
+\TODO{(handover) Exact statement and proof: a factor that depends only on the
+pedestrian state relative to the observing camera is absorbed by the free
+pedestrian state, leaving the camera marginal unchanged.}
+
+\subsection{Information regime}
+\label{sec:an-info}
+\TODO{(handover) Fisher-information analysis; with $\geq 2$ static points per
+node\src{T4} the pedestrians add no camera information; pedestrians carry
+camera information only near zero static support.} The exploratory
+crowd-stratified analysis that probes the high-occupancy regime on the
+existing runs was specified\src{CX} \TODO{its report
+(\texttt{crowd\_explore\_report.md}) is absent; include only if it exists, labelled
+exploratory and post hoc}.
+
+\subsection{Stature unidentifiability}
+\label{sec:an-stature}
+\TODO{(handover) Derivation; MAP shrinkage of per-track $b$.}
+
+\subsection{Range erratum: depth-$z$ vs.\ ray length}
+\label{sec:an-range}
+\TODO{(handover) Size of the error as a function of off-axis angle; which
+results it affected.}
+
+\subsection{Chaotic ORB-SLAM3 spread and detectable effect sizes}
+\label{sec:an-spread}
+Stage~0 gave a relative spread $\sigma_r/\text{median}$ of the SE(3) ATE of
+0.227 (subway\_s1\_36h) and 0.198 (subway\_s1\_24h)\src{CR\,\S3}. For a
+one-sided $\alpha=0.05$, power 0.8 and a 5\% margin, the required number of
+seeds per arm is
+\begin{equation}
+  N = 2\,(1.645+0.84)^2\,\bigl(\sigma_r/\text{median}\,/\,0.05\bigr)^2,
+\end{equation}
+i.e.\ 260 and 200 seeds\src{CR\,\S3}. On 20 identical-binary runs entered
+twice (as OFF and as a fake ON), the 95\% interval of the median ratio was
+already [0.828,\,1.203] and [0.816,\,1.210]\src{PR\,\S4}. With $N=60$ per arm
+the detectable margin is about 10\% on M1 and $+0.20$ on the map-event
+rate\src{A2\,\S A2.2}. \TODO{(handover) Source of the chaos (thread timing,
+layout sensitivity\src{PCR\,\S4}); minimum detectable camera effect vs.\ the
+upper bound of any plausible pedestrian benefit from
+Sec.~\ref{sec:an-info}.}
+
+% =====================================================================
+\section{Experiments}
+\label{sec:exp}
+
+\subsection{Data}
+\TODO{(handover) uHumans2 description\,/\,citation (from T1).}
+Confirmatory sequences: subway\_s1\_36h and subway\_s1\_24h, mono-inertial;
+office\_s1\_06h is descriptive only\src{CR\,\S3}. Tuning used only
+apartment\_s1\_01h, apartment\_s1\_02h and office\_s1\_12h\src{CR\,\S9}.
+
+\subsection{Protocol (pre-registered)}
+Three arms, all deterministic and mono-inertial with masks: OFF (layer
+disabled), ON (pedestrian layer, \texttt{FloorContact: none}), LEV (floor
+levels)\src{CR\,\S2}. $N=60$ seeds per arm on each subway sequence and 20 on
+office, the same seeds for every arm, about 420 runs\src{A2\,\S A2.1,\,A2.5},
+interleaved by seed\src{PR\,\S5}.
+
+\emph{Camera metrics:} M1, SE(3) ATE of the main map (a run without a
+main-map metric counts as $+\infty$); M2, the map-event indicator ($\geq 1$
+reset or new map); secondary: Sim(3) ATE, $|\log\hat s|$, coverage, scale
+failure, exit code\src{CR\,\S4}.
+\emph{Pedestrian metrics:} per run, the median camera-frame position error and
+the median world-frame velocity error of the graph, B0 (per-frame
+back-projection), B1-causal (per-track Kalman filter) and B1-RTS, on the same
+(keyframe, track) samples\src{CR\,\S4,\,PR\,\S4}.
+\emph{Map inclusion} for pedestrian samples: $|\log\hat s|<0.2$, Sim(3)
+camera-centre RMSE $\leq\SI{0.5}{\metre}$, extent $\geq\SI{2}{\metre}$,
+$\geq 50$ keyframes\src{CR\,\S4}.
+
+\emph{Hypotheses} (one-sided $\alpha=0.05$; two independent families, each a
+fixed sequence\src{A2\,\S A2.3}):
+H1, ON vs.\ OFF, upper bound of the M1 median ratio $<1.10$ and of the M2
+difference $<+0.20$\src{A2\,\S A2.2};
+H2a, Wilcoxon signed-rank of the graph/B1-causal velocity log-ratio $<0$;
+H2b, upper bound of the median graph/B0 position ratio $<1.05$\src{CR\,\S5,\,A2\,\S A2.2};
+H3, LEV vs.\ OFF as H1; H4, LEV vs.\ ON position\src{CR\,\S5}.
+
+\subsection{Camera results}
+\begin{table}[t]
+\centering
+\caption{\TODO{P9-E T1 (camera).} Per-cell point estimate and two-sided 95\%
+interval for each camera quantity\src{A2\,\S A2.4}.
+\TODO{Exact layout per P9-E spec (absent).}}
+\label{tab:camera}
+\begin{adjustbox}{max width=\columnwidth}
+\setlength{\tabcolsep}{3pt}\footnotesize
+\begin{tabular}{@{}llccc@{}}
+\toprule
+Cell & Quantity & ON/OFF & LEV/OFF & Verdict \\
+\midrule
+\multirow{2}{*}{subway\_s1\_36h} & M1 ratio [95\%] & \TODO{} & \TODO{} & \TODO{} \\
+                                 & M2 diff.\ [95\%] & \TODO{} & \TODO{} & \TODO{} \\
+\multirow{2}{*}{subway\_s1\_24h} & M1 ratio [95\%] & \TODO{} & \TODO{} & \TODO{} \\
+                                 & M2 diff.\ [95\%] & \TODO{} & \TODO{} & \TODO{} \\
+office\_s1\_06h (descr.)         & M1 ratio        & \TODO{} & \TODO{} & -- \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+The camera ratios are 1.00 [0.94,\,1.06] and 1.07 [0.95,\,1.18]\src{T4}
+\TODO{assign each to its sequence and state the interval type from the P9-D
+results report (absent)}. At the 10\% margin\src{A2\,\S A2.2} one sequence is
+non-inferior and the other inconclusive; H1 therefore formally fails
+(subway\_s1\_24h M1 inconclusive\src{PCT}), and H3 is untested\src{PCT}. As
+neither lower bound exceeds 1.0, this is reported as inconclusive, not as
+degradation\src{A2\,\S A2.4}: we find no evidence of degradation.
+\TODO{M2 and secondary metrics (results report).}
+
+\begin{figure}[t]
+\centering
+\figplaceholder{\TODO{P9-E F1} (content per P9-E spec, absent)}{3.5cm}
+\caption{\TODO{P9-E F1 caption.}}
+\label{fig:f1}
+\end{figure}
+
+\subsection{Pedestrian results}
+\begin{table}[t]
+\centering
+\caption{\TODO{P9-E T2 (pedestrians).} Medians over runs with pedestrian
+samples\src{CR\,\S4}. Runs contributing: 36h ON 9, 36h LEV 6, 24h ON 12,
+24h LEV 10 of 60\src{PCR\,\S1}. \TODO{Exact layout per P9-E spec.}}
+\label{tab:ped}
+\begin{adjustbox}{max width=\columnwidth}
+\setlength{\tabcolsep}{3pt}\footnotesize
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+Cell & Metric & Graph & B0 & B1-causal & B1-RTS \\
+\midrule
+\multirow{2}{*}{subway\_s1\_36h} & pos.\ err.\ [m] & \TODO{} & \TODO{} & \TODO{} & \TODO{} \\
+                                 & vel.\ err.\ [m/s] & \TODO{} & \TODO{} & \TODO{} & \TODO{} \\
+\multirow{2}{*}{subway\_s1\_24h} & pos.\ err.\ [m] & \TODO{} & \TODO{} & \TODO{} & \TODO{} \\
+                                 & vel.\ err.\ [m/s] & \TODO{} & \TODO{} & \TODO{} & \TODO{} \\
+\midrule
+\multicolumn{2}{@{}l}{H2a test statistic / $p$} & \multicolumn{4}{c}{\TODO{}} \\
+\multicolumn{2}{@{}l}{H2b ratio [95\%]}         & \multicolumn{4}{c}{\TODO{}} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+H2 holds in both confirmatory cells\src{PCT}: velocity is better than
+B1-causal (H2a) and position is no worse than B0 (H2b)\src{T4}.
+\TODO{Numbers from the P9-D results report (absent).} The pre-registered
+inclusion filter makes this a result on the best-aligned runs: the Sim(3)
+RMSE $\leq\SI{0.5}{\metre}$ gate removes most subway runs (median per-map RMSE
+\SIrange{1.27}{1.44}{\metre} on subway, \SIrange{0.17}{0.19}{\metre} on office),
+leaving 6--12 of 60 runs per subway cell and arm\src{PCR\,\S1}.
+\TODO{Post-hoc sensitivity analysis (pending\src{T4}).}
+
+\begin{figure}[t]
+\centering
+\figplaceholder{\TODO{P9-E F2} (content per P9-E spec, absent)}{3.5cm}
+\caption{\TODO{P9-E F2 caption.}}
+\label{fig:f2}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\figplaceholder{\TODO{P9-E F3} (content per P9-E spec, absent)}{3.5cm}
+\caption{\TODO{P9-E F3 caption.}}
+\label{fig:f3}
+\end{figure}
+
+\subsection{Throughput}
+\begin{table}[t]
+\centering
+\caption{Threaded-mode wall-clock on subway\_s1\_24h, one run per arm;
+throughput only, not latency\src{PCR\,\S5}.}
+\label{tab:timing}
+\begin{adjustbox}{max width=\columnwidth}
+\footnotesize
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Arm & Wall [s] & Sensor [s] & Wall/sensor & Exit \\
+\midrule
+OFF & 117.5 & 738.0 & 0.159 & 0 \\
+ON  &  99.8 & 738.0 & 0.135 & 0 \\
+LEV & 121.6 & 738.0 & 0.165 & 0 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+Wall/sensor ratios of 0.135--0.165 correspond to about 6--7$\times$ real
+time\src{PCR\,\S5}. The runner admits frames as fast as possible, so these are
+offline throughput figures, not online latency; with one run per arm the
+differences between arms are not interpretable\src{PCR\,\S5}. For comparison,
+the deterministic campaign took a median of 1{,}317--1{,}700\,s wall
+(0.43--0.56)\src{PCR\,\S5}.
+
+\begin{figure}[t]
+\centering
+\figplaceholder{\TODO{P9-E F4} (content per P9-E spec, absent)}{3.5cm}
+\caption{\TODO{P9-E F4 caption.}}
+\label{fig:f4}
+\end{figure}
+
+% =====================================================================
+\section{Discussion and Limitations}
+\label{sec:limits}
+
+\TODO{(handover) Discussion: what the analysis predicts and what the
+experiments show; when pedestrians could help (near-zero static support).}
+
+\paragraph*{Disclosures} Every disclosure below is carried from the
+pre-registration and the post-check; \TODO{add every disclosure listed in the
+handover (absent)}.
+\begin{itemize}
+  \item \emph{Reduced N and margins.} N and the margins were reduced from the
+  Stage~0 plan (5\% margin, $N=260$ and 200) to $N=60$ and a 10\% / $+0.20$
+  camera margin for compute reasons, before any P9-D data\src{A2\,\S A2.6}.
+  \item \emph{Tuning data.} Tuning used apartment\_s1\_01h, apartment\_s1\_02h
+  and office\_s1\_12h only; one evaluation-sequence pair was seen in
+  P9-C\src{CR\,\S9}. \TODO{Name the pair (handover).}
+  \item \emph{H2 on best-aligned runs.} The map-inclusion filter keeps 6--12 of
+  60 subway runs per cell and arm\src{PCR\,\S1}; a post-hoc sensitivity
+  analysis is pending\src{T4}.
+  \item \emph{Camera.} H1 formally failed (inconclusive at the margin on
+  subway\_s1\_24h); H3 was not tested\src{PCT}.
+  \item \emph{Floor levels.} The levels module failed earlier gates (the
+  synthetic gate, S6 spread; the shadow check; re-admission rule C) and was
+  included by two overrides by Marco\src{CR\,\S1,\,\S9}; H4
+  failed\src{PCT}. Not claimed.
+  \item \emph{office\_s1\_06h.} Descriptive only: its mono-inertial
+  initialisation fails with stock ORB-SLAM3 parameters\src{CR\,\S9}. Its OFF arm
+  differed from Stage~0 (exit code 1 in 12/20 vs.\ 5/20 runs, Fisher two-sided
+  $p=0.054$) with identical binaries, configs and command lines and only the
+  settings-file text differing (layout sensitivity)\src{PCR\,\S4}. LEV
+  coverage of 0.055 comes from a reset of the large first map at sensor time
+  \SIrange{501.0}{502.6}{\second} in 11 of 20 LEV runs; no causal attribution is
+  made\src{PCR\,\S4}.
+  \item \emph{Determinism.} Deterministic mode is not stock ORB-SLAM3; three
+  vanilla uninitialised-read contexts remain\src{CR\,\S9}.
+  \item \emph{Terrain.} The subway sequences are multi-level: the camera
+  changes height by about \SI{6}{\metre} and about 16--18\% of pedestrian
+  samples are on non-level ground\src{CR\,\S9}.
+  \item \emph{Analysis defects in descriptive columns.} Two descriptive columns
+  of the frozen analysis script are wrong by construction (runs without an
+  included map printed as 0; transitional share printed as 0 while 3.0--4.8\%
+  of contact rows are flagged); neither reaches H2 or H4\src{PCR\,\S1--2}.
+  \item \emph{Pre-run deviation.} The runner exit code of the five D1-P LEV runs
+  on an evaluation sequence was read, slightly beyond the pre-registered
+  list; no metric was read\src{PR\,\S7}.
+  \item \emph{Simulation only.} Pedestrian accuracy on real data is not
+  claimed\src{T4}; \TODO{InCrowd-VI / real-data plan (handover)}.
+  \item \emph{Latency.} Not measured; only throughput\src{T4,\,PCR\,\S5}.
+\end{itemize}
+
+% =====================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+\TODO{(handover) Two to three sentences restating the supported claims at
+their stated strength (Sec.~\ref{sec:intro}), the analysis, and the follow-up
+on floor levels.}
+
+% =====================================================================
+\section*{Acknowledgment}
+\TODO{(handover)}
+
+% No references are cited yet: refs.bib is empty until the T1 report
+% (verified sources) and the handover supply them.
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}
