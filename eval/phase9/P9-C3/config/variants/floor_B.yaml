@@ -1,0 +1,36 @@
+Pedestrians.RootPxSigma: 1.5000
+Pedestrians.LogDepthSigma: 0.03100
+Pedestrians.SkeletonOverStature: 0.855387
+Pedestrians.StatureFixedM: 1.70
+Pedestrians.Qv: 0.1386
+Pedestrians.FootprintPxSigma: 2.0
+Pedestrians.T1Sigma: 0.02
+Pedestrians.T2Sigma: 0.10
+Pedestrians.CRoot: 0.55
+Pedestrians.CLeg: 0.55
+Pedestrians.MinTrackKeyframes: 03
+Pedestrians.MinStanceBoxPx: 80
+Pedestrians.MinFootObservations: 2
+Pedestrians.MinLpx: 000.0
+Pedestrians.HuberScale: 1.00
+Pedestrians.MaskHeightM: 1.6755
+Pedestrians.GateCenter: -0.0016
+Pedestrians.GateSigma: 0.04167
+Pedestrians.GateK: 000.0
+Pedestrians.FloorContact: joint
+# P9-C3 floor contact. Noise: c3_check0c.py calibration on the tuning sequences (step-5b rule: within-track robust sigma x sqrt(tau)): radial 0.358 m, tangential 0.2755 m.
+# FloorContactOffsetM = pooled median e_v (0c); FloorRegionRadiusM / FloorLowModeFraction chosen on tuning data by c3_check0b.py (mean over the 3 sequences of the share of |z_f - z_floor,GT| > 0.15 m).
+Pedestrians.FloorSigmaRadialM: 0.358
+Pedestrians.FloorSigmaTangentialM: 0.2755
+Pedestrians.FloorContactOffsetM: 0.036
+Pedestrians.FloorRegionRadiusM: 6.0
+Pedestrians.FloorLowModeFraction: 0.25
+Pedestrians.FloorMinPoints: 30
+Pedestrians.FloorBinM: 0.05
+Pedestrians.FloorBelowCameraM: 0.3
+Pedestrians.FloorPlausM: 0.3
+Pedestrians.FloorNeighbours: 5
+Pedestrians.FloorNeighbourRadiusM: 1.0
+Pedestrians.FloorBandM: 0.15
+Pedestrians.BiasSigma: 0.0422
+Pedestrians.BiasMinContacts: 0

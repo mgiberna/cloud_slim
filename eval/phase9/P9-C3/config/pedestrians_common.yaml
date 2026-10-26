@@ -1,0 +1,21 @@
+# P9-C3 pedestrian factor constants = the P9-C2 5d configuration v0 (fixed stature H0 = 1.70 m) + Pedestrians.FloorContact. Pedestrians.Enabled and .Dir are appended per run by run_p9c_one.sh.
+Pedestrians.RootPxSigma: 1.5000
+Pedestrians.LogDepthSigma: 0.03100
+Pedestrians.SkeletonOverStature: 0.855387
+Pedestrians.StatureFixedM: 1.70
+Pedestrians.Qv: 0.1386
+Pedestrians.FootprintPxSigma: 2.0
+Pedestrians.T1Sigma: 0.02
+Pedestrians.T2Sigma: 0.10
+Pedestrians.CRoot: 0.55
+Pedestrians.CLeg: 0.55
+Pedestrians.MinTrackKeyframes: 03
+Pedestrians.MinStanceBoxPx: 80
+Pedestrians.MinFootObservations: 2
+Pedestrians.MinLpx: 000.0
+Pedestrians.HuberScale: 1.00
+Pedestrians.MaskHeightM: 1.6755
+Pedestrians.GateCenter: -0.0016
+Pedestrians.GateSigma: 0.04167
+Pedestrians.GateK: 000.0
+Pedestrians.FloorContact: none

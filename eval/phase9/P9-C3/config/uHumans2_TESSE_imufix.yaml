@@ -1,0 +1,126 @@
+%YAML:1.0
+
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. TESSE simulator (uHumans2 dataset) - left_cam
+# Extracted directly from the recorded bag:
+#   /tesse/left_cam/camera_info  -> intrinsics (720x480, fx=fy=415.692, cx=360, cy=240, zero distortion)
+#   /tf_static (base_link_gt -> left_cam) -> IMU.T_b_c1 (t=[0,0.05,0], q=[0.5,-0.5,0.5,-0.5])
+#--------------------------------------------------------------------------------------------
+File.version: "1.0"
+
+Camera.type: "PinHole"
+
+# Rectified Camera calibration (OpenCV)
+Camera1.fx: 415.69219381653056
+Camera1.fy: 415.69219381653056
+Camera1.cx: 360.0
+Camera1.cy: 240.0
+
+# Distortion parameters (TESSE renders undistorted images)
+Camera1.k1: 0.0
+Camera1.k2: 0.0
+Camera1.p1: 0.0
+Camera1.p2: 0.0
+
+# Camera resolution
+Camera.width: 720
+Camera.height: 480
+
+# Camera frames per second (measured from consecutive /tesse/left_cam header stamps, median dt=0.1s)
+Camera.fps: 10
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+
+# Transformation from body-frame (imu, "base_link_gt") to left camera ("left_cam")
+# Derived from the bag's own /tf_static: t=[0, 0.05, 0], q=[x=0.5, y=-0.5, z=0.5, w=-0.5]
+IMU.T_b_c1: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: f
+   data: [0.0, 0.0, 1.0, 0.0,
+         -1.0, 0.0, 0.0, 0.05,
+         0.0, -1.0, 0.0, 0.0,
+         0.0, 0.0, 0.0, 1.0]
+
+# Do not insert KFs when recently lost
+IMU.InsertKFsWhenLost: 0
+
+# IMU noise - TESSE's actual simulated noise model is not recorded in the bag;
+# these are generic starting values (same family as VINS-mono defaults used in the
+# other configs here). Tune IMU.NoiseGyro/NoiseAcc/GyroWalk/AccWalk against the
+# /tesse/imu/clean/imu vs /tesse/imu/noisy/imu topics if initialization remains unstable.
+#
+# R2 FULL IMU CORRECTION -- all four values replaced with P2a's MEASURED numbers.
+# (docs/evaluation/results/r2_imu_correction/criterion.md)
+#
+# P2a did exactly the tuning the comment above asks for. The uHumans2 bags carry
+# /tesse/imu/clean/imu, /tesse/imu/noisy/imu AND the injected biases, so
+#     noisy - clean - bias
+# recovers TESSE's injected white noise exactly -- this is a measurement, not a fit, and office
+# and subway agree to three significant figures (p2a_inertial_cost/findings.md SS2, SS7):
+#
+#   parameter    configured   measured    ratio
+#   NoiseGyro    1.0e-3       1.69e-4     5.9x  too LOOSE
+#   NoiseAcc     1.0e-2       2.00e-3     5.0x  too LOOSE
+#   GyroWalk     1.0e-6       1.94e-5     19.5x too TIGHT
+#   AccWalk      1.0e-4       3.00e-3     30.1x too TIGHT
+#
+# Q2's walkfix variant (eval/walkfix/uHumans2_TESSE_walkfix.yaml) corrected ONLY the two walks, to
+# isolate the walk hypothesis without confounding it with a re-weighting of every EdgeInertial.
+# That test is done: the walks had NO effect on subway's scale ramp (0/10), but they removed the
+# VI-init failures and the t~640 s divergence (baseline runs 1/3/5 excursions 114%, 6846%, 429%;
+# walkfix 45-100%, all clean). This file is the all-four correction P2a SS7 said should eventually
+# land, as its own change with a full re-baseline.
+#
+# Correcting the white-noise densities as well re-weights EVERY EdgeInertial in both ORB-SLAM3 and
+# the joint window: P2a predicted the inertial share of graph chi2 rising from ~1.2% to 23-29%.
+# That is why R2 invalidates every preserved baseline and must be measured against an old-IMU arm
+# captured in the SAME session rather than against any stored number.
+#
+# Values are P2a's measured numbers at three significant figures, the same rounding the walkfix
+# variant used (SS7's worst-axis figures are 1.70e-4 / 2.01e-3 / 1.96e-5 / 3.01e-3; the ~1%
+# difference is far inside the 5-30x effects being corrected).
+#
+# IMPORTANT: the joint window keeps its OWN copy of these four values in
+# object_motion_estimator/config/config.yaml (joint_window_node block). The two MUST match --
+# they are the same physical IMU. Both are asserted at startup by run_r2_capture.sh.
+IMU.Threshold: 0.5
+IMU.NoiseGyro: 1.69e-4
+IMU.NoiseAcc: 2.00e-3
+IMU.GyroWalk: 1.94e-5
+IMU.AccWalk: 3.00e-3
+IMU.Frequency: 200.0
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 1250
+
+# ORB Extractor: Scale factor between levels in the scale pyramid
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid
+ORBextractor.nLevels: 8
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1.0
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2.0
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3.0
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -3.5
+Viewer.ViewpointF: 500.0
