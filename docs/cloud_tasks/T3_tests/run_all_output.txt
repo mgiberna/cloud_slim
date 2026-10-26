@@ -1,0 +1,90 @@
+== test_bootstrap_inf
+pct q=2.5: 0-based index 249  (nearest-rank ceil(q n/100)-1 = 249)
+pct q=95: 0-based index 9499  (nearest-rank ceil(q n/100)-1 = 9499)
+pct q=97.5: 0-based index 9749  (nearest-rank ceil(q n/100)-1 = 9749)
+pct == numpy inverted_cdf on 200 random vectors with +inf: OK
+ON with  0/60 failures (+inf)                              point=1.003 ub95=1.068 lo95=0.9481 hi95=1.082
+ON with  3/60 failures (+inf)                              point=1.005 ub95=1.076 lo95=0.9538 hi95=1.089
+ON with  6/60 failures (+inf)                              point=1.036 ub95=1.095 lo95=0.9621 hi95=1.108
+ON with 10/60 failures (+inf)                              point=1.048 ub95=1.118 lo95=0.9764 hi95=1.139
+ON with 20/60 failures (+inf)                              point=1.092 ub95=1.212 lo95=1.014 hi95=1.234
+ON with 29/60 failures (+inf)                              point=1.232 ub95=inf lo95=1.099 hi95=inf
+ON with 30/60 failures (+inf)                              point=inf ub95=inf lo95=1.099 hi95=inf
+OFF with 30/60 failures, ON none                           point=0 ub95=0.8955 lo95=0 hi95=0.9134
+  camera_test M1 pass = True status = pass
+both arms all failures                                     point=inf ub95=inf lo95=inf hi95=inf
+None, nan and +inf entries give identical results: OK
+arm == OFF data (independent resampling): point 1.000, 95% two-sided [0.935, 1.068], ub 1.057
+no-effect lognormal(sd 0.25) N=60: M1 passes in 119/200 simulated cells
+test_bootstrap_inf OK
+== test_one_sided
+H2 n= 6 graph/B1c vel ratio 0.8: p_one=0.01562 pass_a=True | graph/B0 pos ratio 0.9: ub95=0.953 pass_b=True
+H2 n= 6 graph/B1c vel ratio 1.25: p_one=1 pass_a=False | graph/B0 pos ratio 1.2: ub95=1.233 pass_b=False
+   min exact one-sided Wilcoxon p at n=6: 0.01562 (2^-n = 0.01562)
+H2 n= 9 graph/B1c vel ratio 0.8: p_one=0.001953 pass_a=True | graph/B0 pos ratio 0.9: ub95=0.913 pass_b=True
+H2 n= 9 graph/B1c vel ratio 1.25: p_one=1 pass_a=False | graph/B0 pos ratio 1.2: ub95=1.236 pass_b=False
+   min exact one-sided Wilcoxon p at n=9: 0.00195 (2^-n = 0.00195)
+H2 n=12 graph/B1c vel ratio 0.8: p_one=0.0002441 pass_a=True | graph/B0 pos ratio 0.9: ub95=0.941 pass_b=True
+H2 n=12 graph/B1c vel ratio 1.25: p_one=1 pass_a=False | graph/B0 pos ratio 1.2: ub95=1.214 pass_b=False
+   min exact one-sided Wilcoxon p at n=12: 0.00024 (2^-n = 0.00024)
+H4 n=6/9 LEV/ON pos ratio 0.8: MW p_one=0.0003996 pass=True
+H4 n=6/9 LEV/ON pos ratio 1.25: MW p_one=1 pass=False
+   min one-sided MW p at 6/9 (complete separation): 2.00e-04
+H4 n=10/12 LEV/ON pos ratio 0.8: MW p_one=4.367e-05 pass=True
+H4 n=10/12 LEV/ON pos ratio 1.25: MW p_one=1 pass=False
+   min one-sided MW p at 10/12 (complete separation): 4.37e-05
+H4 vel ratio exactly 1.10 -> True
+H2 with 2 runs -> {'n': 2, 'passed': False, 'note': 'too few runs with pedestrian samples'}
+test_one_sided OK
+== test_newcombe
+56/70 - 48/80: code [0.0524, 0.3339]  published [0.0524, 0.3339]  one-sided ub95 0.3136
+9/10 - 3/10: code [0.1705, 0.8090]  published [0.1705, 0.8090]  one-sided ub95 0.7896
+6/7 - 2/7: code [0.0582, 0.8062]  published [0.0582, 0.8062]  one-sided ub95 0.7878
+5/56 - 0/29: code [-0.0381, 0.1926]  published [-0.0381, 0.1926]  one-sided ub95 0.1723
+0/10 - 0/20: code [-0.1611, 0.2775]  published [-0.1611, 0.2775]  one-sided ub95 0.2129
+10/10 - 0/20: code [0.6791, 1.0000]  published [0.6791, 1.0000]  one-sided ub95 1.0000
+ON 30/60 events vs OFF 6/60: point 0.4 ub95 0.514 status degradation
+test_newcombe OK
+== test_main_map
+A: one map 0-100 s, drift
+   main_map_id=0 covered_gt_share=1.000 ok=True M1(SE3)=1.089 event=False | incl_retired map=s0 sim3_incl_retired=1.0459304381247432
+B: map0 0-90 s (drift) RETIRED by reset, map1 91-100 s survives
+   main_map_id=1 covered_gt_share=0.100 ok=True M1(SE3)=0.012 event=True | incl_retired map=r0_map0 sim3_incl_retired=0.790647981363356
+C: as B but surviving map1 only 97-100 s (15 kf)
+   main_map_id=1 covered_gt_share=0.040 ok=False M1(SE3)=inf event=True | incl_retired map=r0_map0 sim3_incl_retired=0.9659634515937059
+D: map0 0-90 s and map1 91-100 s both SURVIVE (new map, no reset)
+   main_map_id=0 covered_gt_share=0.908 ok=True M1(SE3)=0.952 event=True | incl_retired map=s0 sim3_incl_retired=0.790647981363356
+E: tie: map3 (10-40 s) and map1 (60-90 s) cover equally many GT stamps
+   main_map_id=1 covered_gt_share=0.318 ok=True M1(SE3)=0.000 event=True | incl_retired map=s1 sim3_incl_retired=1.2271867910090792e-15
+tie -> main map id 1 (frozen rule: first maximum in map-id order = lowest map id)
+test_main_map OK
+== test_population
+state at t= 498.0 s (written in the OLD map) -> assigned to old map
+state at t= 499.0 s (written in the OLD map) -> assigned to old map
+state at t= 499.5 s (written in the OLD map) -> assigned to NEW map
+state at t= 499.9 s (written in the OLD map) -> assigned to NEW map
+state at t= 500.0 s (written in the OLD map) -> assigned to NEW map
+state of a dropped 15-keyframe map at t=100.8 -> old map Sim(3)
+map s=0.81881 |log s|=0.1999 rmse=0.000 extent=6.00 n=200 -> included=True
+map s=1.22152 |log s|=0.2001 rmse=0.000 extent=6.00 n=200 -> included=False
+map s=1.00000 |log s|=0.0000 rmse=0.000 extent=1.78 n=60 -> included=False
+map s=1.00000 |log s|=0.0000 rmse=0.000 extent=2.14 n=72 -> included=True
+noisy map rmse=0.446 -> included=True (gate 0.5 m)
+noisy map rmse=0.492 -> included=True (gate 0.5 m)
+noisy map rmse=0.536 -> included=False (gate 0.5 m)
+map with n=50 keyframes, extent 3.00 m -> included=True
+map with n=49 keyframes, extent 2.94 m -> included=False
+B0 1.6 m towards person B: graph -> ('object_A', 0.0, 19), B0 -> ('object_B', 0.3999999999999999, 19)  (GT person, median cam error, n samples)
+B0 6 m away: graph -> ('object_A', 0.0, 19), B0 -> (None, None, 0)  (GT person, median cam error, n samples)
+keyframe spacing 0.2 s: graph velocity rows 29, B0 velocity rows 27, position rows 29
+keyframe spacing 0.4 s: graph velocity rows 29, B0 velocity rows 0, position rows 29
+crash marker           -> {'m1': inf, 'event': True}
+runner abort (no summary, md5 present) -> {'m1': inf, 'event': False}
+ok run, run.log missing (loss counts None) -> {'m1': 1.0, 'event': False}
+descriptives: n_with_ped=0 n_no_included_map=0 (truth: 1 none_included, 1 no_samples, 2 without a record) exit1 rate=0.33 (truth 2/4 runs = 0.50; ok-only denominator)
+levels: assigned=3 transitional=0 share=0.0 (truth 2 of 4 contacts = 0.5); used=3 n_states=4 coverage=0.75 (2 distinct states with a contact -> 0.5; duplicate row counted)
+test_population OK
+== test_power
+log-sd 0.15: M1 passes in 257/300 = 0.86 of simulated no-effect cells (both cells must pass: ~0.73)
+log-sd 0.198: M1 passes in 200/300 = 0.67 of simulated no-effect cells (both cells must pass: ~0.44)
+log-sd 0.227: M1 passes in 167/300 = 0.56 of simulated no-effect cells (both cells must pass: ~0.31)
